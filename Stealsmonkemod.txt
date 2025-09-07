@@ -1,0 +1,76 @@
+using UnityEngine;
+using System.Collections;
+
+public class MonkeCheatMod : MonoBehaviour
+{
+    // Configurable super speed values
+    public float walkSpeed = 20f;
+    public float runSpeed = 50f;
+
+    // Noclip state
+    private bool noclipEnabled = false;
+    private Rigidbody rb;
+    private Collider col;
+
+    void Start()
+    {
+        // Get physics components
+        rb = GetComponent<Rigidbody>();
+        col = GetComponent<Collider>();
+
+        if (rb != null)
+            rb.useGravity = true; // normal gravity; can be disabled if wanted
+    }
+
+    void Update()
+    {
+        HandleSpeedHack();
+        HandleNoclipToggle();
+    }
+
+    private void HandleSpeedHack()
+    {
+        // Force override movement speeds (works if hooked to Unity movement vars)
+        // These names may differ; adapt to your target PlayerMovement script variables
+
+        // If your original movement script manages speed differently, directly manipulate velocity
+        if (Input.GetKey(KeyCode.W))
+        {
+            transform.position += transform.forward * walkSpeed * Time.deltaTime;
+        }
+        if (Input.GetKey(KeyCode.LeftShift) && Input.GetKey(KeyCode.W))
+        {
+            transform.position += transform.forward * runSpeed * Time.deltaTime;
+        }
+    }
+
+    private void HandleNoclipToggle()
+    {
+        // Example for desktop debug or controller-based in VR
+        // VR input example: OVRInput.Button.PrimaryThumbstick
+        if (Input.GetKeyDown(KeyCode.N)) // or VR button mapping
+        {
+            noclipEnabled = !noclipEnabled;
+            if (col != null)
+                col.enabled = !noclipEnabled;
+
+            if (rb != null)
+                rb.useGravity = !noclipEnabled;
+
+            Debug.Log("[MonkeCheatMod] Noclip toggled: " + noclipEnabled);
+        }
+
+        if (noclipEnabled)
+        {
+            // Disable collision physics by directly controlling transform
+            Vector3 moveDir = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+            transform.position += transform.TransformDirection(moveDir) * runSpeed * Time.deltaTime;
+
+            // Optional: fly mode
+            if (Input.GetKey(KeyCode.Space)) // ascend
+                transform.position += Vector3.up * runSpeed * Time.deltaTime;
+            if (Input.GetKey(KeyCode.LeftControl)) // descend
+                transform.position -= Vector3.up * runSpeed * Time.deltaTime;
+        }
+    }
+}
